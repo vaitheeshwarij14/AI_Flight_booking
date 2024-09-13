@@ -1,3 +1,7 @@
+!pip install SpeechRecognition pyaudio
+!pip install SpeechRecognition pydub
+
+
 import speech_recognition as sr
 
 # Initialize recognizer
