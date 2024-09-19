@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stay with AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        nav {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        nav a {
+            color: #ccc;
+            margin-right: 20px;
+            text-decoration: none;
+        }
+        h1 {
+            margin-top: 50px;
+            color: #333;
+        }
+        #speakBtn {
+            padding: 10px 20px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #speakBtn:hover {
+            background-color: #444;
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </div>
+        <div>{{ username }}</div>
+    </nav>
+    <h1>Stay with AI</h1>
+    <button id="speakBtn">Speak</button>
+    <p id="output">This is the AI speaking!</p>
+
+    <script>
+        const speakBtn = document.getElementById('speakBtn');
+        const output = document.getElementById('output');
+
+        // Check if browser supports SpeechRecognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+
+            recognition.onstart = function () {
+                output.innerHTML = "Listening...";
+            };
+
+            recognition.onspeechend = function () {
+                recognition.stop();
+            };
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                output.innerHTML = transcript;
+            };
+
+            speakBtn.addEventListener('click', () => {
+                recognition.start();
+            });
+        } else {
+            output.innerHTML = "Speech Recognition is not supported in this browser.";
+        }
+    </script>
+</body>
+</html>
