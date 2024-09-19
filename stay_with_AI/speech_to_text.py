@@ -24,33 +24,39 @@ def capture_and_convert_speech():
         try:
             while listening:
                 print("Listening...")
-                result_label.config(text="Listening...")
+                result_label.config(text="Listening...")  # Update label to show status
                 root.update()  # Update the GUI to reflect the status
 
                 # Listen for audio input (this call waits for the user to finish talking)
                 audio = recognizer.listen(source)
 
                 # Recognize speech using Google Web Speech API
-                text = recognizer.recognize_google(audio)
-                print("You said: " + text)
-                result_label.config(text="You said: " + text)
+                try:
+                    text = recognizer.recognize_google(audio)
+                    print("You said: " + text)
+                    result_label.config(text="You said: " + text)  # Update the label with the recognized text
+                except sr.UnknownValueError:
+                    result_label.config(text="Sorry, I could not understand the audio.")
+                except sr.RequestError as e:
+                    result_label.config(text=f"Could not request results; {e}")
 
                 # Stop automatically after one successful recognition
                 listening = False
-        except sr.UnknownValueError:
-            result_label.config(text="Sorry, I could not understand the audio.")
-        except sr.RequestError as e:
+        except Exception as e:
             result_label.config(text=f"Error: {e}")
 
 # Function to start recording
 def start_recording():
     global listening
-    listening = True  # Enable listening
-    result_label.config(text="Ready to listen... Click 'Stop' to finish.")
-    root.update()  # Update the GUI immediately
+    if not listening:  # Check if already listening to avoid restarting the process
+        listening = True  # Enable listening
+        result_label.config(text="Ready to listen... Click 'Stop' to finish.")
+        root.update()  # Update the GUI immediately
 
-    # Start a thread for listening in the background
-    threading.Thread(target=capture_and_convert_speech).start()
+        # Start a thread for listening in the background
+        threading.Thread(target=capture_and_convert_speech).start()
+    else:
+        result_label.config(text="Already listening...")
 
 # Function to stop recording
 def stop_recording():
@@ -68,13 +74,17 @@ root.geometry("400x250")
 instruction_label = tk.Label(root, text="Click 'Start Recording' to begin, and 'Stop' to finish:")
 instruction_label.pack(pady=10)
 
+# Create a frame to hold the buttons
+button_frame = tk.Frame(root)
+button_frame.pack(pady=10)
+
 # Create a button to start recording
-start_button = tk.Button(root, text="Start Recording", command=start_recording, width=25)
-start_button.pack(pady=10)
+start_button = tk.Button(button_frame, text="Start Recording", command=start_recording, width=15)
+start_button.grid(row=0, column=0, padx=10)
 
 # Create a button to stop recording
-stop_button = tk.Button(root, text="Stop Recording", command=stop_recording, width=25)
-stop_button.pack(pady=10)
+stop_button = tk.Button(button_frame, text="Stop Recording", command=stop_recording, width=15)
+stop_button.grid(row=0, column=1, padx=10)
 
 # Create a label to display the result
 result_label = tk.Label(root, text="", wraplength=300)

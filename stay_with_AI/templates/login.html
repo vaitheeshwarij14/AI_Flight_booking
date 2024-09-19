@@ -15,6 +15,17 @@
             <button type="submit">Login</button>
             <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
         </form>
+
+        <!-- Flash messages for errors or feedback -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
     </div>
 </body>
 </html>

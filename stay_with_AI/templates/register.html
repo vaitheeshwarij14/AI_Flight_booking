@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="login-container">
+    <div class="register-container">
         <form method="POST">
             <h2>Register</h2>
             <input type="text" name="username" placeholder="Username" required>
@@ -16,6 +16,17 @@
             <button type="submit">Register</button>
             <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
         </form>
+
+        <!-- Flash messages for errors or feedback -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
     </div>
 </body>
 </html>
