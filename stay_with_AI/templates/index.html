@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
+    <title>Flight Search and Booking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -11,32 +11,48 @@
         var isRecording = false;
         
         $(document).ready(function() {
+            // Start Recording Button Click Event
             $('#start-recording').on('click', function() {
                 if (isRecording) {
                     alert("Recording is already in progress.");
                     return;
                 }
-                // Start recording
+
+                // Initialize Speech Recognition
                 recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'en-US';
                 recognition.interimResults = true;
-                
+
+                // Handle the speech result
                 recognition.onresult = function(event) {
                     var transcript = '';
                     for (var i = event.resultIndex; i < event.results.length; i++) {
                         transcript += event.results[i][0].transcript;
                     }
                     $('#transcription').text(transcript);
+
+                    // Parse command (e.g., "New York to London")
+                    var parts = transcript.split(' to ');
+                    if (parts.length === 2) {
+                        var origin = parts[0].trim();
+                        var destination = parts[1].trim();
+                        fetchFlights(origin, destination);
+                    } else {
+                        $('#transcription').append('<br>Unable to parse origin and destination. Please try again.');
+                    }
                 };
 
+                // Handle any recognition errors
                 recognition.onerror = function(event) {
                     console.error("Speech recognition error:", event.error);
                 };
 
+                // Start the recognition
                 recognition.start();
                 isRecording = true;
             });
 
+            // Stop Recording Button Click Event
             $('#stop-recording').on('click', function() {
                 if (!isRecording) {
                     alert("No recording is in progress.");
@@ -49,10 +65,71 @@
                 isRecording = false;
             });
 
+            // Logout Button Click Event
             $('#logout').on('click', function() {
                 window.location.href = '/logout';
             });
         });
+
+        // Function to fetch flights based on origin and destination
+        function fetchFlights(origin, destination) {
+            console.log("Fetching flights for origin:", origin, "and destination:", destination);  // Debugging
+
+            $.ajax({
+                url: '/fetch_flights',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ origin: origin, destination: destination }),
+                success: function(response) {
+                    console.log("Flight API response:", response);  // Debugging
+                    var flights = response.flights;
+
+                    // Clear previous results and display new flights
+                    $('#transcription').html('');
+                    if (flights.length > 0) {
+                        $('#transcription').append('<br>Available flights:');
+                        flights.forEach(function(flight) {
+                            var flightHtml = `
+                                <div class="flight-item">
+                                    <p>Flight ${flight.flight_number}: ${flight.origin} to ${flight.destination} on ${flight.date} with ${flight.flight_name}</p>
+                                    <button class="book-flight" data-flight='${JSON.stringify(flight)}'>Book Now</button>
+                                </div>
+                            `;
+                            $('#transcription').append(flightHtml);
+                        });
+
+                        // Add event listeners to "Book Now" buttons
+                        $('.book-flight').on('click', function() {
+                            var flightData = $(this).data('flight');
+                            bookFlight(flightData);
+                        });
+                    } else {
+                        $('#transcription').append('<br>No flights found for this route.');
+                    }
+                },
+                error: function(error) {
+                    console.log("Error fetching flights:", error);  // Debugging
+                    $('#transcription').text('Error fetching flights. Please try again.');
+                }
+            });
+        }
+
+        // Function to book a flight
+        function bookFlight(flightData) {
+            $.ajax({
+                url: '/book_flight',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(flightData),
+                success: function(response) {
+                    alert('Flight booked successfully!');
+                    window.location.href = '/booking_confirmation/' + response.booking_id;
+                },
+                error: function(error) {
+                    alert('Error booking flight. Please try again.');
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -61,6 +138,7 @@
         <button id="start-recording">Start to Speak</button>
         <button id="stop-recording">Stop Recording</button>
         <p id="transcription">Your speech will appear here...</p>
+        <div id="flight-list"></div>
         <button id="logout">Logout</button>
     </div>
 </body>
