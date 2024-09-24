@@ -73,7 +73,7 @@
 
         // Function to fetch flights based on origin and destination
         function fetchFlights(origin, destination) {
-            console.log("Fetching flights for origin:", origin, "and destination:", destination);  // Debugging
+            console.log("Fetching flights for origin:", origin, "and destination:", destination);
 
             $.ajax({
                 url: '/fetch_flights',
@@ -81,10 +81,9 @@
                 contentType: 'application/json',
                 data: JSON.stringify({ origin: origin, destination: destination }),
                 success: function(response) {
-                    console.log("Flight API response:", response);  // Debugging
+                    console.log("Flight API response:", response);
                     var flights = response.flights;
 
-                    // Clear previous results and display new flights
                     $('#transcription').html('');
                     if (flights.length > 0) {
                         $('#transcription').append('<br>Available flights:');
@@ -104,12 +103,12 @@
                             bookFlight(flightData);
                         });
                     } else {
-                        $('#transcription').append('<br>No flights found for this route.');
+                        $('#transcription').append('<br>No flights found for the given route.');
                     }
                 },
                 error: function(error) {
-                    console.log("Error fetching flights:", error);  // Debugging
-                    $('#transcription').text('Error fetching flights. Please try again.');
+                    console.error("Error fetching flights:", error);
+                    $('#transcription').append('<br>These are the flight are currently available to book');
                 }
             });
         }
@@ -122,24 +121,30 @@
                 contentType: 'application/json',
                 data: JSON.stringify(flightData),
                 success: function(response) {
-                    alert('Flight booked successfully!');
-                    window.location.href = '/booking_confirmation/' + response.booking_id;
+                    console.log("Booking response:", response);
+                    var bookingId = response.booking_id;
+                    window.location.href = '/booking_confirmation/' + bookingId;
                 },
                 error: function(error) {
-                    alert('Error booking flight. Please try again.');
+                    console.error("Error booking flight:", error);
+                    alert("Failed to book the flight. Please try again.");
                 }
             });
         }
     </script>
 </head>
 <body>
-    <div class="index-container">
-        <h1>Welcome, {{ session['user'] }}!</h1>
-        <button id="start-recording">Start to Speak</button>
-        <button id="stop-recording">Stop Recording</button>
-        <p id="transcription">Your speech will appear here...</p>
-        <div id="flight-list"></div>
+    <header>
+        <h1>Welcome to the Flight Booking System</h1>
         <button id="logout">Logout</button>
-    </div>
+    </header>
+
+    <main>
+        <h2>Start Your Search</h2>
+        <button id="start-recording">Start Recording</button>
+        <button id="stop-recording">Stop Recording</button>
+
+        <div id="transcription"></div>
+    </main>
 </body>
 </html>

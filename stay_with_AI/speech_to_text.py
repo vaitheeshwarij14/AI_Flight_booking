@@ -1,94 +1,73 @@
 import speech_recognition as sr
-import tkinter as tk
-from tkinter import messagebox
-import threading
 
-# Initialize recognizer
-recognizer = sr.Recognizer()
-
-# Global flag to control when to stop listening
-listening = False
-
-# Function to capture audio from the microphone and convert it to text
-def capture_and_convert_speech():
-    global listening
-    listening = True  # Start listening
+def listen_for_input(prompt_text):
+    recognizer = sr.Recognizer()
+    microphone = sr.Microphone()
     
-    with sr.Microphone() as source:
-        print("Please say something...")
-
-        # Adjust the recognizer sensitivity to ambient noise
+    print(prompt_text)
+    with microphone as source:
         recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
 
-        # Capture audio from the microphone until stop is clicked
-        try:
-            while listening:
-                print("Listening...")
-                result_label.config(text="Listening...")  # Update label to show status
-                root.update()  # Update the GUI to reflect the status
+    try:
+        response = recognizer.recognize_google(audio)
+        print(f"You said: {response}")
+        return response
+    except sr.UnknownValueError:
+        print("Sorry, I could not understand your speech.")
+        return None
+    except sr.RequestError:
+        print("Error with the speech recognition service.")
+        return None
 
-                # Listen for audio input (this call waits for the user to finish talking)
-                audio = recognizer.listen(source)
+# Collecting user details step-by-step
+def collect_travel_details():
+    details = {}
 
-                # Recognize speech using Google Web Speech API
-                try:
-                    text = recognizer.recognize_google(audio)
-                    print("You said: " + text)
-                    result_label.config(text="You said: " + text)  # Update the label with the recognized text
-                except sr.UnknownValueError:
-                    result_label.config(text="Sorry, I could not understand the audio.")
-                except sr.RequestError as e:
-                    result_label.config(text=f"Could not request results; {e}")
+    print("Please provide the following details for your flight booking:")
 
-                # Stop automatically after one successful recognition
-                listening = False
-        except Exception as e:
-            result_label.config(text=f"Error: {e}")
+    # Full Name
+    details['full_name'] = listen_for_input("Please say your full name.")
+    
+    # Contact Information
+    details['email'] = listen_for_input("Please say your email address.")
+    details['phone_number'] = listen_for_input("Please say your phone number.")
+    
+    # Date of Birth
+    details['date_of_birth'] = listen_for_input("Please say your date of birth in format day-month-year.")
+    
+    # Passport or ID Number
+    details['passport_id'] = listen_for_input("Please say your passport or ID number.")
 
-# Function to start recording
-def start_recording():
-    global listening
-    if not listening:  # Check if already listening to avoid restarting the process
-        listening = True  # Enable listening
-        result_label.config(text="Ready to listen... Click 'Stop' to finish.")
-        root.update()  # Update the GUI immediately
-
-        # Start a thread for listening in the background
-        threading.Thread(target=capture_and_convert_speech).start()
+    # Travel Details
+    details['departure_city'] = listen_for_input("Please say your departure city.")
+    details['destination_city'] = listen_for_input("Please say your destination city.")
+    details['flight_date'] = listen_for_input("Please say the date of your flight in format day-month-year.")
+    
+    # Payment Information
+    details['payment_method'] = listen_for_input("Please say your preferred payment method, such as credit card or PayPal.")
+    
+    # Baggage Preferences
+    details['baggage_info'] = listen_for_input("Do you want extra baggage? Please say yes or no.")
+    
+    # Seat Preference
+    details['seat_preference'] = listen_for_input("Please say your seat preference: window, aisle, or middle.")
+    
+    # Special Requests
+    details['special_requests'] = listen_for_input("Do you have any special requests, like meal preferences or assistance?")
+    
+    # Confirm flight details
+    print("\nPlease confirm the following details:")
+    for key, value in details.items():
+        print(f"{key.replace('_', ' ').title()}: {value}")
+    
+    confirmation = listen_for_input("Is all the information correct? Please say yes or no.")
+    if confirmation and confirmation.lower() == "yes":
+        print("Booking confirmed!")
+        return details
     else:
-        result_label.config(text="Already listening...")
+        print("Please restart the process to correct the details.")
+        return None
 
-# Function to stop recording
-def stop_recording():
-    global listening
-    listening = False  # Disable listening
-    result_label.config(text="Recording stopped.")
-    root.update()
-
-# Create the main window
-root = tk.Tk()
-root.title("Voice to Text Converter")
-root.geometry("400x250")
-
-# Create a label for the instructions
-instruction_label = tk.Label(root, text="Click 'Start Recording' to begin, and 'Stop' to finish:")
-instruction_label.pack(pady=10)
-
-# Create a frame to hold the buttons
-button_frame = tk.Frame(root)
-button_frame.pack(pady=10)
-
-# Create a button to start recording
-start_button = tk.Button(button_frame, text="Start Recording", command=start_recording, width=15)
-start_button.grid(row=0, column=0, padx=10)
-
-# Create a button to stop recording
-stop_button = tk.Button(button_frame, text="Stop Recording", command=stop_recording, width=15)
-stop_button.grid(row=0, column=1, padx=10)
-
-# Create a label to display the result
-result_label = tk.Label(root, text="", wraplength=300)
-result_label.pack(pady=10)
-
-# Start the GUI loop
-root.mainloop()
+if __name__ == "__main__":
+    collect_travel_details()

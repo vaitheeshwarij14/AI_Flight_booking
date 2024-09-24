@@ -4,15 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Booking Confirmation</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="confirmation-container">
-        <h2>Booking Confirmation</h2>
-        <p>Flight {{ booking[0] }}: {{ booking[2] }} to {{ booking[3] }} on {{ booking[4] }}</p>
-        <p>Booked by: {{ booking[5] }}</p>
-        <p>Flight name: {{ booking[1] }}</p>
-        <p>Your booking is confirmed. Thank you for booking with us!</p>
-    </div>
+    <h2>Booking Confirmation</h2>
+    <p>Thank you for booking with us!</p>
+    <p>Flight Number: {{ booking[0] }}</p>
+    <p>Flight Name: {{ booking[1] }}</p>
+    <p>Origin: {{ booking[2] }}</p>
+    <p>Destination: {{ booking[3] }}</p>
+    <p>Date: {{ booking[4] }}</p>
+    <p>Full Name: {{ booking[6] }}</p>
+    <p>Contact Email: {{ booking[7] }}</p>
+    <p>Contact Phone: {{ booking[8] }}</p>
+    <p>Date of Birth: {{ booking[9] }}</p>
+    <p>Passport/ID: {{ booking[10] }}</p>
+    <p>Payment Info: {{ booking[11] }}</p>
+    <p>Baggage: {{ booking[12] }}</p>
+    <p>Seat Preference: {{ booking[13] }}</p>
+    <p>Special Requests: {{ booking[14] }}</p>
 </body>
 </html>

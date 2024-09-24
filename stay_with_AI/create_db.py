@@ -1,37 +1,40 @@
 import sqlite3
 
-def create_database():
-    # Connect to the database (it will be created if it doesn't exist)
+def create_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-
+    
     # Create users table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            email TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL
-        )
-    ''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        email TEXT UNIQUE,
+        password TEXT
+    )''')
 
     # Create bookings table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bookings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            flight_number TEXT NOT NULL,
-            flight_name TEXT NOT NULL,
-            origin TEXT NOT NULL,
-            destination TEXT NOT NULL,
-            date TEXT NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    ''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        flight_number TEXT,
+        flight_name TEXT,
+        origin TEXT,
+        destination TEXT,
+        date TEXT,
+        full_name TEXT,
+        contact_email TEXT,
+        contact_phone TEXT,
+        dob TEXT,
+        passport TEXT,
+        payment_info TEXT,
+        baggage TEXT,
+        seat TEXT,
+        special_requests TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )''')
 
-    # Commit changes and close the connection
     conn.commit()
     conn.close()
 
 if __name__ == '__main__':
-    create_database()
+    create_db()

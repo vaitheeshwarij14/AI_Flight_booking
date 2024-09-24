@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Booking Details</title>
+    <style>
+        .listening {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        function startDictation() {
+            if (window.hasOwnProperty('webkitSpeechRecognition')) {
+                var recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = "en-US";
+                
+                // Show "Listening..." message
+                document.getElementById('status').innerText = "Listening...";
+                document.getElementById('status').classList.add('listening');
+
+                recognition.onresult = function(e) {
+                    document.getElementById('status').innerText = "Recording finished.";
+                    document.getElementById('status').classList.remove('listening');
+                    document.getElementById('recorded_text').value = e.results[0][0].transcript;
+                };
+
+                recognition.onerror = function(e) {
+                    document.getElementById('status').innerText = "Error occurred.";
+                    document.getElementById('status').classList.remove('listening');
+                };
+
+                recognition.start();
+            } else {
+                alert("Your browser does not support speech recognition.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Record Your Booking Details</h1>
+    <p id="status">Click the button below to start recording your booking details.</p>
+    <button onclick="startDictation()">Start Recording</button>
+    <form action="{{ url_for('book') }}" method="post">
+        <button type="submit">Book Now</button>
+    </form>
+</body>
+</html>
