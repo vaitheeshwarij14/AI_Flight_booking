@@ -9,111 +9,228 @@
     <script>
         var recognition;
         var isRecording = false;
-        
+        var details = {
+            full_name: '',
+            email: '',
+            phone_number: '',
+            date_of_birth: '',
+            passport_id: '',
+            departure_city: '',
+            destination_city: '',
+            flight_date: '',
+            payment_method: '',
+            baggage_info: '',
+            seat_preference: '',
+            special_requests: ''
+        };
+
         $(document).ready(function() {
-            // Start Recording Button Click Event
             $('#start-recording').on('click', function() {
                 if (isRecording) {
-                    alert("Recording is already in progress.");
+                    $('#transcription').text("Recording is already in progress.");
                     return;
                 }
 
-                // Initialize Speech Recognition
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'en-US';
-                recognition.interimResults = true;
-
-                // Handle the speech result
-                recognition.onresult = function(event) {
-                    var transcript = '';
-                    for (var i = event.resultIndex; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
-                    }
-                    $('#transcription').text(transcript);
-
-                    // Parse command (e.g., "New York to London")
-                    var parts = transcript.split(' to ');
-                    if (parts.length === 2) {
-                        var origin = parts[0].trim();
-                        var destination = parts[1].trim();
-                        fetchFlights(origin, destination);
-                    } else {
-                        $('#transcription').append('<br>Unable to parse origin and destination. Please try again.');
-                    }
-                };
-
-                // Handle any recognition errors
-                recognition.onerror = function(event) {
-                    console.error("Speech recognition error:", event.error);
-                };
-
-                // Start the recognition
-                recognition.start();
-                isRecording = true;
+                startVoiceRecognition();
             });
 
-            // Stop Recording Button Click Event
             $('#stop-recording').on('click', function() {
                 if (!isRecording) {
-                    alert("No recording is in progress.");
+                    $('#transcription').text("No recording is in progress.");
                     return;
                 }
-                // Stop recording
-                if (recognition) {
-                    recognition.stop();
-                }
-                isRecording = false;
+                stopVoiceRecognition();
             });
 
-            // Logout Button Click Event
             $('#logout').on('click', function() {
                 window.location.href = '/logout';
             });
         });
 
-        // Function to fetch flights based on origin and destination
-        function fetchFlights(origin, destination) {
-            console.log("Fetching flights for origin:", origin, "and destination:", destination);
+        function startVoiceRecognition() {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
 
+            recognition.onresult = function(event) {
+                var transcript = event.results[0][0].transcript;
+                $('#transcription').text("You said: " + transcript);
+                processCommand(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                $('#transcription').text("Sorry, I didn't catch that. Please try again.");
+                stopVoiceRecognition();
+            };
+
+            recognition.start();
+            isRecording = true;
+            askForDetail("Please say your full name:");
+        }
+
+        function stopVoiceRecognition() {
+            if (recognition) {
+                recognition.stop();
+            }
+            isRecording = false;
+        }
+
+        function processCommand(command) {
+            console.log("Processing command:", command);
+            if (!details.full_name) {
+                details.full_name = command;
+                console.log("Full Name:", details.full_name);
+                setTimeout(() => askForDetail("Please say your email address:"), 1000);
+            } else if (!details.email) {
+                details.email = command;
+                console.log("Email:", details.email);
+                setTimeout(() => askForDetail("Please say your phone number:"), 1000);
+            } else if (!details.phone_number) {
+                details.phone_number = command;
+                console.log("Phone Number:", details.phone_number);
+                setTimeout(() => askForDetail("Please say your date of birth in format day-month-year:"), 1000);
+            } else if (!details.date_of_birth) {
+                details.date_of_birth = command;
+                console.log("Date of Birth:", details.date_of_birth);
+                setTimeout(() => askForDetail("Please say your passport or ID number:"), 1000);
+            } else if (!details.passport_id) {
+                details.passport_id = command;
+                console.log("Passport ID:", details.passport_id);
+                setTimeout(() => askForDetail("Please say your departure city:"), 1000);
+            } else if (!details.departure_city) {
+                details.departure_city = command;
+                console.log("Departure City:", details.departure_city);
+                setTimeout(() => askForDetail("Please say your destination city:"), 1000);
+            } else if (!details.destination_city) {
+                details.destination_city = command;
+                console.log("Destination City:", details.destination_city);
+                setTimeout(() => askForDetail("Please say the date of your flight in format day-month-year:"), 1000);
+            } else if (!details.flight_date) {
+                details.flight_date = command;
+                console.log("Flight Date:", details.flight_date);
+                setTimeout(() => askForDetail("Please say your preferred payment method, such as credit card or PayPal:"), 1000);
+            } else if (!details.payment_method) {
+                details.payment_method = command;
+                console.log("Payment Method:", details.payment_method);
+                setTimeout(() => askForDetail("Do you want extra baggage? Please say yes or no:"), 1000);
+            } else if (!details.baggage_info) {
+                details.baggage_info = command;
+                console.log("Baggage Info:", details.baggage_info);
+                setTimeout(() => askForDetail("Please say your seat preference: window, aisle, or middle:"), 1000);
+            } else if (!details.seat_preference) {
+                details.seat_preference = command;
+                console.log("Seat Preference:", details.seat_preference);
+                setTimeout(() => askForDetail("Do you have any special requests, like meal preferences or assistance?"), 1000);
+            } else if (!details.special_requests) {
+                details.special_requests = command;
+                console.log("Special Requests:", details.special_requests);
+                setTimeout(() => showFinalDetails(), 1000);
+            }
+        }
+
+        function askForDetail(promptMessage) {
+            $('#prompt').text(promptMessage);
+            $('#transcription').text("");
+
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                var transcript = event.results[0][0].transcript;
+                $('#transcription').text("You said: " + transcript);
+                processCommand(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                $('#transcription').text("Sorry, I didn't catch that. Please try again.");
+                stopVoiceRecognition();
+            };
+
+            recognition.start();
+
+            // Stop recognition after 10 seconds if no response
+            setTimeout(() => {
+                if (isRecording) {
+                    $('#transcription').text("Time is up! Please restart the process.");
+                    stopVoiceRecognition();
+                }
+            }, 10000);
+        }
+
+        function showFinalDetails() {
+            $('#prompt').html(`
+                <p>Please review the following details:</p>
+                <p>Full Name: ${details.full_name}</p>
+                <p>Email: ${details.email}</p>
+                <p>Phone Number: ${details.phone_number}</p>
+                <p>Date of Birth: ${details.date_of_birth}</p>
+                <p>Passport ID: ${details.passport_id}</p>
+                <p>Departure City: ${details.departure_city}</p>
+                <p>Destination City: ${details.destination_city}</p>
+                <p>Flight Date: ${details.flight_date}</p>
+                <p>Payment Method: ${details.payment_method}</p>
+                <p>Baggage Info: ${details.baggage_info}</p>
+                <p>Seat Preference: ${details.seat_preference}</p>
+                <p>Special Requests: ${details.special_requests}</p>
+                <p>Are all the details correct? Please say yes or no:</p>
+            `);
+
+            // Store details in database before confirmation
+            storeDetailsInDatabase(details);
+
+            $('#transcription').text("");
+
+            // Allow for confirmation for 1 minute
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                var transcript = event.results[0][0].transcript;
+                $('#transcription').text("You said: " + transcript);
+                if (transcript.toLowerCase() === "yes") {
+                    bookFlight(details); // Proceed to book the flight with collected details
+                } else {
+                    $('#transcription').text("Please restart the process to correct the details.");
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                $('#transcription').text("Sorry, I didn't catch that. Please try again.");
+                stopVoiceRecognition();
+            };
+
+            recognition.start();
+
+            // Stop recognition after 60 seconds if no response
+            setTimeout(() => {
+                if (isRecording) {
+                    $('#transcription').text("Confirmation time is up! Please restart the process.");
+                    stopVoiceRecognition();
+                }
+            }, 60000);
+        }
+
+        function storeDetailsInDatabase(flightData) {
             $.ajax({
-                url: '/fetch_flights',
+                url: '/store_flight_details', // Endpoint to store details in your database
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ origin: origin, destination: destination }),
+                data: JSON.stringify(flightData),
                 success: function(response) {
-                    console.log("Flight API response:", response);
-                    var flights = response.flights;
-
-                    $('#transcription').html('');
-                    if (flights.length > 0) {
-                        $('#transcription').append('<br>Available flights:');
-                        flights.forEach(function(flight) {
-                            var flightHtml = `
-                                <div class="flight-item">
-                                    <p>Flight ${flight.flight_number}: ${flight.origin} to ${flight.destination} on ${flight.date} with ${flight.flight_name}</p>
-                                    <button class="book-flight" data-flight='${JSON.stringify(flight)}'>Book Now</button>
-                                </div>
-                            `;
-                            $('#transcription').append(flightHtml);
-                        });
-
-                        // Add event listeners to "Book Now" buttons
-                        $('.book-flight').on('click', function() {
-                            var flightData = $(this).data('flight');
-                            bookFlight(flightData);
-                        });
-                    } else {
-                        $('#transcription').append('<br>No flights found for the given route.');
-                    }
+                    console.log("Details stored successfully:", response);
                 },
                 error: function(error) {
-                    console.error("Error fetching flights:", error);
-                    $('#transcription').append('<br>These are the flight are currently available to book');
+                    console.error("Error storing details:", error);
+                    $('#transcription').text("Failed to store the flight details. Please try again.");
                 }
             });
         }
 
-        // Function to book a flight
         function bookFlight(flightData) {
             $.ajax({
                 url: '/book_flight',
@@ -121,30 +238,28 @@
                 contentType: 'application/json',
                 data: JSON.stringify(flightData),
                 success: function(response) {
-                    console.log("Booking response:", response);
-                    var bookingId = response.booking_id;
-                    window.location.href = '/booking_confirmation/' + bookingId;
+                    console.log("Flight booked successfully:", response);
+                    $('#prompt').text("Flight booked successfully! Thank you for choosing our service.");
+                    $('#transcription').text("");
                 },
                 error: function(error) {
                     console.error("Error booking flight:", error);
-                    alert("Failed to book the flight. Please try again.");
+                    $('#transcription').text("There was an error while booking the flight. Please try again.");
                 }
             });
         }
     </script>
 </head>
 <body>
-    <header>
-        <h1>Welcome to the Flight Booking System</h1>
-        <button id="logout">Logout</button>
-    </header>
-
-    <main>
-        <h2>Start Your Search</h2>
-        <button id="start-recording">Start Recording</button>
-        <button id="stop-recording">Stop Recording</button>
-
-        <div id="transcription"></div>
-    </main>
+    <div class="container">
+        <div class="transcription-section">
+            <h2>Flight Booking Assistant</h2>
+            <p id="prompt">Click the start button to begin recording your details.</p>
+            <p id="transcription"></p>
+            <button id="start-recording">Start Recording</button>
+            <button id="stop-recording">Stop Recording</button>
+            <button id="logout">Logout</button>
+        </div>
+    </div>
 </body>
 </html>

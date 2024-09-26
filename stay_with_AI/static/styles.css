@@ -33,3 +33,42 @@ button {
 button:hover {
     background-color: #45a049;
 }
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background: #35424a;
+    color: #ffffff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1, h2 {
+    margin: 0;
+}
+
+button {
+    background: #5cb85c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #4cae4c;
+}
+
+main {
+    padding: 20px;
+}
+
+#details-display {
+    margin-top: 20px;
+}

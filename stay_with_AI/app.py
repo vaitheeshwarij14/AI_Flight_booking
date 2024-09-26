@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import sqlite3
 import requests
-import json
 import speech_recognition as sr
 
 app = Flask(__name__)
@@ -18,6 +17,12 @@ def get_db():
 def create_tables():
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -101,10 +106,11 @@ def login():
         
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT password FROM users WHERE email=? OR username=?", (email_or_username, email_or_username))
+        cursor.execute("SELECT id, password FROM users WHERE email=? OR username=?", (email_or_username, email_or_username))
         user = cursor.fetchone()
-        if user and password == user[0]:
+        if user and password == user[1]:
             session['user'] = email_or_username
+            session['user_id'] = user[0]  # Store user ID in session
             return redirect(url_for('index'))
         else:
             flash("Invalid login credentials")
@@ -139,6 +145,7 @@ def index():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('user_id', None)
     return redirect(url_for('login'))
 
 # Route for fetching flights
@@ -171,40 +178,25 @@ def booking_details(flight_id):
         # Call the function to collect details
         details = collect_travel_details()
         if details:
-            # Handle the collected details (e.g., save to database, send confirmation)
+            # Handle the collected details (e.g., save to database)
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('''INSERT INTO bookings (user_id, flight_number, flight_name, origin, destination, date, full_name, contact_email, contact_phone, dob, passport, payment_info, baggage, seat, special_requests)
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                           (session['user_id'], flight_id, details['flight_name'], details['departure_city'], details['destination_city'],
+                            details['flight_date'], details['full_name'], details['email'], details['phone_number'], details['dob'], 
+                            details['passport'], details['payment_info'], details['baggage'], details['seat'], details['special_requests']))
+            conn.commit()
+            conn.close()
             return redirect(url_for('booking_confirmation_list', flight_id=flight_id))
         else:
             return redirect(url_for('index'))  # Redirect to the booking page to try again
 
     return render_template('booking_details.html', flight_id=flight_id)
 
-@app.route('/booking_confirmation_list')
-def booking_confirmation_list():
+@app.route('/booking_confirmation_list/<int:flight_id>')
+def booking_confirmation_list(flight_id):
     return render_template('booking_confirmation.html')  # Confirmation page
-
-# Route for recording details
-@app.route('/recording_details/<int:flight_id>', methods=['GET'])
-def recording_details(flight_id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template('recording_details.html', flight_id=flight_id)
-
-# Route for submitting recorded details
-@app.route('/submit_recording/<int:flight_id>', methods=['POST'])
-def submit_recording(flight_id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    recorded_text = request.form.get('recorded_text')
-    
-    # Process the recorded text and extract details
-    # For now, just print it to the console
-    print(f"Recorded details for Flight {flight_id}: {recorded_text}")
-
-    # You can implement logic to parse the recorded text and save the details
-    # or redirect to a confirmation page.
-    
-    return redirect(url_for('booking_confirmation_list'))
 
 # Route for booking confirmation with booking ID
 @app.route('/booking_confirmation/<int:booking_id>')
