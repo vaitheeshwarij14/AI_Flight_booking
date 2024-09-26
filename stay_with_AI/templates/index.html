@@ -45,6 +45,11 @@
             $('#logout').on('click', function() {
                 window.location.href = '/logout';
             });
+
+            $('#confirm-details').on('click', function() {
+                updateDetailsFromInput(); // Update details from input fields
+                bookFlight(details); // Proceed to book the flight
+            });
         });
 
         function startVoiceRecognition() {
@@ -85,7 +90,7 @@
             } else if (!details.email) {
                 details.email = command;
                 console.log("Email:", details.email);
-                setTimeout(() => askForDetail("Please say your phone number:"), 1000);
+                setTimeout(() => askForDetail("Please say your phone number:"), 5000);
             } else if (!details.phone_number) {
                 details.phone_number = command;
                 console.log("Phone Number:", details.phone_number);
@@ -125,7 +130,7 @@
             } else if (!details.special_requests) {
                 details.special_requests = command;
                 console.log("Special Requests:", details.special_requests);
-                setTimeout(() => showFinalDetails(), 1000);
+                setTimeout(() => showEditableDetails(), 1000);
             }
         }
 
@@ -160,75 +165,38 @@
             }, 10000);
         }
 
-        function showFinalDetails() {
+        function showEditableDetails() {
             $('#prompt').html(`
-                <p>Please review the following details:</p>
-                <p>Full Name: ${details.full_name}</p>
-                <p>Email: ${details.email}</p>
-                <p>Phone Number: ${details.phone_number}</p>
-                <p>Date of Birth: ${details.date_of_birth}</p>
-                <p>Passport ID: ${details.passport_id}</p>
-                <p>Departure City: ${details.departure_city}</p>
-                <p>Destination City: ${details.destination_city}</p>
-                <p>Flight Date: ${details.flight_date}</p>
-                <p>Payment Method: ${details.payment_method}</p>
-                <p>Baggage Info: ${details.baggage_info}</p>
-                <p>Seat Preference: ${details.seat_preference}</p>
-                <p>Special Requests: ${details.special_requests}</p>
-                <p>Are all the details correct? Please say yes or no:</p>
+                <p>Please review and edit the following details:</p>
+                <label>Full Name: <input type="text" id="edit-full-name" value="${details.full_name}"></label><br>
+                <label>Email: <input type="text" id="edit-email" value="${details.email}"></label><br>
+                <label>Phone Number: <input type="text" id="edit-phone-number" value="${details.phone_number}"></label><br>
+                <label>Date of Birth: <input type="text" id="edit-dob" value="${details.date_of_birth}"></label><br>
+                <label>Passport ID: <input type="text" id="edit-passport-id" value="${details.passport_id}"></label><br>
+                <label>Departure City: <input type="text" id="edit-departure-city" value="${details.departure_city}"></label><br>
+                <label>Destination City: <input type="text" id="edit-destination-city" value="${details.destination_city}"></label><br>
+                <label>Flight Date: <input type="text" id="edit-flight-date" value="${details.flight_date}"></label><br>
+                <label>Payment Method: <input type="text" id="edit-payment-method" value="${details.payment_method}"></label><br>
+                <label>Baggage Info: <input type="text" id="edit-baggage-info" value="${details.baggage_info}"></label><br>
+                <label>Seat Preference: <input type="text" id="edit-seat-preference" value="${details.seat_preference}"></label><br>
+                <label>Special Requests: <input type="text" id="edit-special-requests" value="${details.special_requests}"></label><br>
+                <button id="confirm-details">Confirm Details</button>
             `);
-
-            // Store details in database before confirmation
-            storeDetailsInDatabase(details);
-
-            $('#transcription').text("");
-
-            // Allow for confirmation for 1 minute
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-
-            recognition.onresult = function(event) {
-                var transcript = event.results[0][0].transcript;
-                $('#transcription').text("You said: " + transcript);
-                if (transcript.toLowerCase() === "yes") {
-                    bookFlight(details); // Proceed to book the flight with collected details
-                } else {
-                    $('#transcription').text("Please restart the process to correct the details.");
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error("Speech recognition error:", event.error);
-                $('#transcription').text("Sorry, I didn't catch that. Please try again.");
-                stopVoiceRecognition();
-            };
-
-            recognition.start();
-
-            // Stop recognition after 60 seconds if no response
-            setTimeout(() => {
-                if (isRecording) {
-                    $('#transcription').text("Confirmation time is up! Please restart the process.");
-                    stopVoiceRecognition();
-                }
-            }, 60000);
         }
 
-        function storeDetailsInDatabase(flightData) {
-            $.ajax({
-                url: '/store_flight_details', // Endpoint to store details in your database
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(flightData),
-                success: function(response) {
-                    console.log("Details stored successfully:", response);
-                },
-                error: function(error) {
-                    console.error("Error storing details:", error);
-                    $('#transcription').text("Failed to store the flight details. Please try again.");
-                }
-            });
+        function updateDetailsFromInput() {
+            details.full_name = $('#edit-full-name').val();
+            details.email = $('#edit-email').val();
+            details.phone_number = $('#edit-phone-number').val();
+            details.date_of_birth = $('#edit-dob').val();
+            details.passport_id = $('#edit-passport-id').val();
+            details.departure_city = $('#edit-departure-city').val();
+            details.destination_city = $('#edit-destination-city').val();
+            details.flight_date = $('#edit-flight-date').val();
+            details.payment_method = $('#edit-payment-method').val();
+            details.baggage_info = $('#edit-baggage-info').val();
+            details.seat_preference = $('#edit-seat-preference').val();
+            details.special_requests = $('#edit-special-requests').val();
         }
 
         function bookFlight(flightData) {
@@ -238,13 +206,11 @@
                 contentType: 'application/json',
                 data: JSON.stringify(flightData),
                 success: function(response) {
-                    console.log("Flight booked successfully:", response);
-                    $('#prompt').text("Flight booked successfully! Thank you for choosing our service.");
-                    $('#transcription').text("");
+                    $('#transcription').html(`<p>Flight booked successfully!</p>`);
                 },
                 error: function(error) {
                     console.error("Error booking flight:", error);
-                    $('#transcription').text("There was an error while booking the flight. Please try again.");
+                    $('#transcription').html(`<p>Failed to book flight. Please try again later.</p>`);
                 }
             });
         }
@@ -252,14 +218,12 @@
 </head>
 <body>
     <div class="container">
-        <div class="transcription-section">
-            <h2>Flight Booking Assistant</h2>
-            <p id="prompt">Click the start button to begin recording your details.</p>
-            <p id="transcription"></p>
-            <button id="start-recording">Start Recording</button>
-            <button id="stop-recording">Stop Recording</button>
-            <button id="logout">Logout</button>
-        </div>
+        <h1>Flight Search and Booking</h1>
+        <div id="prompt"></div>
+        <p id="transcription"></p>
+        <button id="start-recording">Start Voice Recording</button>
+        <button id="stop-recording">Stop Voice Recording</button>
+        <button id="logout">Logout</button>
     </div>
 </body>
 </html>

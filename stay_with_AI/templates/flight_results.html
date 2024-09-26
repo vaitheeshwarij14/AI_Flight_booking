@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flight Results</title>
+</head>
+<body>
+    <h1>Available Flights</h1>
+    {% if flights %}
+        <ul>
+        {% for flight in flights %}
+            <li>Flight Number: {{ flight['flight_number'] }} - {{ flight['origin'] }} to {{ flight['destination'] }} on {{ flight['date'] }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No flights available</p>
+    {% endif %}
+</body>
+</html>
